@@ -40,21 +40,30 @@ func set(node *goyaml.Node, path Path, value any, valueNodeFactory func() *goyam
 		if err != nil {
 			return
 		}
-		for i < len(path)-1 {
-			// Insert new mapping nodes.
-			var key *goyaml.Node
-			key, err = plumbing.MakeScalar(path[i])
-			if err != nil {
-				err = fmt.Errorf(`TODO: %w`, err)
+		if i < len(path)-1 {
+			if node.Kind != goyaml.MappingNode {
+				err = fmt.Errorf(`node at path %s is not a mapping`, path[:i])
 				return
 			}
-			value := &goyaml.Node{
-				Kind: goyaml.MappingNode,
+			for {
+				// Insert new mapping nodes.
+				var key *goyaml.Node
+				key, err = plumbing.MakeScalar(path[i])
+				if err != nil {
+					err = fmt.Errorf(`error inserting into mapping: error generating key for path[%d]: path[%d] has unsupported type %T: %w`, i, i, path[i], err)
+					return
+				}
+				value := &goyaml.Node{
+					Kind: goyaml.MappingNode,
+				}
+				addToMapping(node, key, value)
+				node = value
+				changed = true
+				i++
+				if i == len(path)-1 {
+					break
+				}
 			}
-			addToMapping(node, key, value)
-			node = value
-			changed = true
-			i++
 		}
 		var j int
 		if node.Kind == goyaml.MappingNode {

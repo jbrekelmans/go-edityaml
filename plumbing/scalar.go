@@ -134,3 +134,11 @@ func MakeUintScalar(ui uint64) *goyaml.Node {
 		Value: strconv.FormatUint(ui, 10),
 	}
 }
+
+func MustMakeScalar(v any) *goyaml.Node {
+	n, err := MakeScalar(v)
+	if err != nil {
+		panic(err)
+	}
+	return n
+}
