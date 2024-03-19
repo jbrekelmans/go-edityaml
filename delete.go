@@ -17,8 +17,8 @@ func Delete(node *goyaml.Node, path Path) (changed bool, err error) {
 	}
 	var i int
 	node, i, err = Get(node, path[:len(path)-1])
-	if err != nil || node == nil {
-		return false, nil
+	if err != nil || i < len(path)-1 {
+		return false, err
 	}
 	pathItem := path[i]
 	if node.Kind == goyaml.MappingNode {

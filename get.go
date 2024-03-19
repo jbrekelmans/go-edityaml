@@ -10,9 +10,9 @@ import (
 
 // Get gets a node at the specified path.
 // If len(path) == 0 then returns (value, i, err) = (node, 0, nil).
-// value is nil if the node at the specified path could not be found.
-// i is the number of path items walked. If the value was found then i == len(path).
+// i is the number of path items walked.
 // If the value was not found then i < len(path).
+// If the value was found then i == len(path).
 func Get(node *goyaml.Node, path Path) (value *goyaml.Node, i int, err error) {
 	node, err = plumbing.ResolveAlias(node)
 	if err != nil {
@@ -28,6 +28,7 @@ func Get(node *goyaml.Node, path Path) (value *goyaml.Node, i int, err error) {
 				return
 			}
 			if j < 0 {
+				value = node
 				return
 			}
 			node = node.Content[j]
