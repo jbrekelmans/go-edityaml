@@ -76,5 +76,5 @@ func convertToInt(v any) (int, error) {
 		}
 		return convertBigIntToInt(v)
 	}
-	return 0, fmt.Errorf(`not an integer type %T`, v)
+	return 0, fmt.Errorf(`value is not an integer type (got type %T)`, v)
 }

@@ -145,6 +145,11 @@ func Test_convertToInt(t *testing.T) {
 			Value:         (*big.Int)(nil),
 			ErrorContains: "cannot convert nil",
 		},
+		testCase{
+			Name:          "TestCase16",
+			Value:         "str",
+			ErrorContains: "value is not an integer type",
+		},
 	} {
 		t.Run(tc.Name, func(t *testing.T) {
 			actual, err := convertToInt(tc.Value)
