@@ -60,11 +60,11 @@ func Get(node *goyaml.Node, path Path) (value *goyaml.Node, i int, err error) {
 // If the value was not found then i < len(path).
 // Returns an error if the node at the specified path is not a string.
 func GetString(node *goyaml.Node, path Path) (s string, i int, err error) {
-	value, i, err := Get(node, path)
+	node, i, err = Get(node, path)
 	if err != nil || i < len(path) {
 		return
 	}
-	shortTag := value.ShortTag()
+	shortTag := node.ShortTag()
 	if shortTag != "!!str" {
 		err = fmt.Errorf(`node at path %s does not have short tag "!!str"`, path)
 		return
