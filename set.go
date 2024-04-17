@@ -33,7 +33,7 @@ func getMappingInsertIndex(node, key *goyaml.Node) int {
 	return i
 }
 
-func set(node *goyaml.Node, path Path, value any, valueNodeFactory func() *goyaml.Node) (valueNode *goyaml.Node, changed bool, err error) {
+func Set(node *goyaml.Node, path Path, value any, valueNodeFactory func() *goyaml.Node) (valueNode *goyaml.Node, changed bool, err error) {
 	var i int
 	if len(path) > 0 {
 		node, i, err = Get(node, path[:len(path)-1])
@@ -111,7 +111,7 @@ func set(node *goyaml.Node, path Path, value any, valueNodeFactory func() *goyam
 // The scalar node representing the specified string is returned.
 // This can be used to control the style/comments in the output YAML.
 func SetString(node *goyaml.Node, path Path, value string) (valueNode *goyaml.Node, changed bool, err error) {
-	valueNode, changed, err = set(node, path, value, func() *goyaml.Node {
+	valueNode, changed, err = Set(node, path, value, func() *goyaml.Node {
 		return plumbing.MakeStringScalar(value)
 	})
 	return
