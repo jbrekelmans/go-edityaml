@@ -129,7 +129,7 @@ func SetBool(node *goyaml.Node, path Path, value bool) (valueNode *goyaml.Node, 
 	return
 }
 
-// SetString sets the node at the specified path to the specified int.
+// SetInt sets the node at the specified path to the specified int.
 // Maps are created along the path as needed.
 // path can be empty, in which case node is updated to a scalar with the specified int value.
 // The scalar node representing the specified int is returned.
