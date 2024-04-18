@@ -33,7 +33,7 @@ func getMappingInsertIndex(node, key *goyaml.Node) int {
 	return i
 }
 
-func Set(node *goyaml.Node, path Path, value any, valueNodeFactory func() *goyaml.Node) (valueNode *goyaml.Node, changed bool, err error) {
+func set(node *goyaml.Node, path Path, value any, valueNodeFactory func() *goyaml.Node) (valueNode *goyaml.Node, changed bool, err error) {
 	var i int
 	if len(path) > 0 {
 		node, i, err = Get(node, path[:len(path)-1])
@@ -111,8 +111,32 @@ func Set(node *goyaml.Node, path Path, value any, valueNodeFactory func() *goyam
 // The scalar node representing the specified string is returned.
 // This can be used to control the style/comments in the output YAML.
 func SetString(node *goyaml.Node, path Path, value string) (valueNode *goyaml.Node, changed bool, err error) {
-	valueNode, changed, err = Set(node, path, value, func() *goyaml.Node {
+	valueNode, changed, err = set(node, path, value, func() *goyaml.Node {
 		return plumbing.MakeStringScalar(value)
+	})
+	return
+}
+
+// SetBool sets the node at the specified path to the specified boolean value.
+// Maps are created along the path as needed.
+// path can be empty, in which case node is updated to a scalar with the specified boolean value.
+// The scalar node representing the specified boolean is returned.
+// This can be used to control the style/comments in the output YAML.
+func SetBool(node *goyaml.Node, path Path, value bool) (valueNode *goyaml.Node, changed bool, err error) {
+	valueNode, changed, err = set(node, path, value, func() *goyaml.Node {
+		return plumbing.MakeBoolScalar(value)
+	})
+	return
+}
+
+// SetString sets the node at the specified path to the specified int.
+// Maps are created along the path as needed.
+// path can be empty, in which case node is updated to a scalar with the specified int value.
+// The scalar node representing the specified int is returned.
+// This can be used to control the style/comments in the output YAML.
+func SetInt(node *goyaml.Node, path Path, value int64) (valueNode *goyaml.Node, changed bool, err error) {
+	valueNode, changed, err = set(node, path, value, func() *goyaml.Node {
+		return plumbing.MakeIntScalar(value)
 	})
 	return
 }
