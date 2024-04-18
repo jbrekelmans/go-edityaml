@@ -116,3 +116,27 @@ func SetString(node *goyaml.Node, path Path, value string) (valueNode *goyaml.No
 	})
 	return
 }
+
+// SetBool sets the node at the specified path to the specified boolean value.
+// Maps are created along the path as needed.
+// path can be empty, in which case node is updated to a scalar with the specified boolean value.
+// The scalar node representing the specified boolean is returned.
+// This can be used to control the style/comments in the output YAML.
+func SetBool(node *goyaml.Node, path Path, value bool) (valueNode *goyaml.Node, changed bool, err error) {
+	valueNode, changed, err = set(node, path, value, func() *goyaml.Node {
+		return plumbing.MakeBoolScalar(value)
+	})
+	return
+}
+
+// SetInt sets the node at the specified path to the specified int.
+// Maps are created along the path as needed.
+// path can be empty, in which case node is updated to a scalar with the specified int value.
+// The scalar node representing the specified int is returned.
+// This can be used to control the style/comments in the output YAML.
+func SetInt(node *goyaml.Node, path Path, value int64) (valueNode *goyaml.Node, changed bool, err error) {
+	valueNode, changed, err = set(node, path, value, func() *goyaml.Node {
+		return plumbing.MakeIntScalar(value)
+	})
+	return
+}
