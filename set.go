@@ -162,10 +162,10 @@ func SetSequence(node *goyaml.Node, path Path, content []any) (valueNode *goyaml
 		case string:
 			contents = append(contents, plumbing.MakeStringScalar(v))
 		}
-	}
 
-	if err != nil {
-		return
+		if err != nil {
+			return
+		}
 	}
 
 	valueNode, changed, err = set(node, path, nil, func() *goyaml.Node {
