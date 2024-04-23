@@ -155,16 +155,13 @@ func SetSequence(node *goyaml.Node, path Path, content []any) (valueNode *goyaml
 		switch v := c.(type) {
 		default:
 			err = fmt.Errorf("unsupported type %T in sequence", v)
+			return
 		case int64:
 			contents = append(contents, plumbing.MakeIntScalar(v))
 		case bool:
 			contents = append(contents, plumbing.MakeBoolScalar(v))
 		case string:
 			contents = append(contents, plumbing.MakeStringScalar(v))
-		}
-
-		if err != nil {
-			return
 		}
 	}
 
