@@ -140,3 +140,53 @@ func SetInt(node *goyaml.Node, path Path, value int64) (valueNode *goyaml.Node, 
 	})
 	return
 }
+
+// SetSequence sets path to a new empty sequence (ie. yaml list/array) and fills it with the contents of content.
+//
+// The content param may only contain values of the following types: int64, bool, string.
+// Nested sequences are not currently supported.
+//
+// The node representing the sequence is returned.
+// This can be used to control the style/comments in the output YAML.
+func SetSequence(node *goyaml.Node, path Path, content []any) (valueNode *goyaml.Node, changed bool, err error) {
+	var contents []*goyaml.Node
+	for _, c := range content {
+		// Depending on the type of each value in content, add a yaml node representation of it to contents
+		switch v := c.(type) {
+		default:
+			err = fmt.Errorf("unsupported type %T in sequence", v)
+		case int64:
+			contents = append(contents, plumbing.MakeIntScalar(v))
+		case bool:
+			contents = append(contents, plumbing.MakeBoolScalar(v))
+		case string:
+			contents = append(contents, plumbing.MakeStringScalar(v))
+		}
+	}
+
+	if err != nil {
+		return
+	}
+
+	valueNode, changed, err = set(node, path, nil, func() *goyaml.Node {
+		return &goyaml.Node{
+			Kind:    goyaml.SequenceNode,
+			Content: contents,
+			Tag:     "!!seq",
+		}
+	})
+	return
+}
+
+// SetNewMap creates an empty Mapping at the specified path.
+// The node representing the specified Map is returned.
+// This can be used to control the style/comments in the output YAML.
+func SetNewMap(node *goyaml.Node, path Path) (valueNode *goyaml.Node, changed bool, err error) {
+	valueNode, changed, err = set(node, path, nil, func() *goyaml.Node {
+		return &goyaml.Node{
+			Kind: goyaml.MappingNode,
+			Tag:  "!!map",
+		}
+	})
+	return
+}
