@@ -141,49 +141,48 @@ func SetInt(node *goyaml.Node, path Path, value int64) (valueNode *goyaml.Node, 
 	return
 }
 
-// SetSequence sets path to a new empty sequence (ie. yaml list/array) and fills it with the contents of content.
+// SetScalar sets a scalar value at the given path within the given node.
 //
-// The content param may only contain values of the following types: int64, bool, string.
-// Nested sequences are not currently supported.
+// node is the node to set the value within.
 //
-// The node representing the sequence is returned.
-// This can be used to control the style/comments in the output YAML.
-func SetSequence(node *goyaml.Node, path Path, content []any) (valueNode *goyaml.Node, changed bool, err error) {
-	var contents []*goyaml.Node
-	for _, c := range content {
-		// Depending on the type of each value in content, add a yaml node representation of it to contents
-		switch v := c.(type) {
-		default:
-			err = fmt.Errorf("unsupported type %T in sequence", v)
-			return
-		case int64:
-			contents = append(contents, plumbing.MakeIntScalar(v))
-		case bool:
-			contents = append(contents, plumbing.MakeBoolScalar(v))
-		case string:
-			contents = append(contents, plumbing.MakeStringScalar(v))
-		}
+// path is the path within the node to set the value at.
+//
+// value is the scalar value to set, eg. "hello".
+//
+// Returns a bool showing whether or not the value set updated an existing value (ie. value was changed).
+func SetScalar(node *goyaml.Node, path Path, value any) (changed bool, err error) {
+	n, err := plumbing.MakeScalar(value)
+	if err == nil {
+		_, changed, err = set(node, path, nil, func() *goyaml.Node {
+			return n
+		})
 	}
 
-	valueNode, changed, err = set(node, path, nil, func() *goyaml.Node {
-		return &goyaml.Node{
-			Kind:    goyaml.SequenceNode,
-			Content: contents,
-			Tag:     "!!seq",
-		}
-	})
 	return
 }
 
-// SetNewMap creates an empty Mapping at the specified path.
-// The node representing the specified Map is returned.
-// This can be used to control the style/comments in the output YAML.
-func SetNewMap(node *goyaml.Node, path Path) (valueNode *goyaml.Node, changed bool, err error) {
-	valueNode, changed, err = set(node, path, nil, func() *goyaml.Node {
-		return &goyaml.Node{
-			Kind: goyaml.MappingNode,
-			Tag:  "!!map",
-		}
+// SetScalar sets a node at the given path within the given node.
+//
+// node is the node to set the value within.
+//
+// path is the path within the node to set the value at.
+//
+// value is the node to set at the specified path.
+//
+// Returns the node that was added.
+//
+// Example, adding a new empty mapping node to "node.x.y":
+//
+//	value := &goyaml.Node{
+//		Kind: goyaml.MappingNode,
+//		Tag:  "!!map",
+//	}
+//
+// err := Set(node, ".x.y", value)
+// ...
+func Set(node *goyaml.Node, path Path, value *goyaml.Node) (addedNode *goyaml.Node, err error) {
+	addedNode, _, err = set(node, path, nil, func() *goyaml.Node {
+		return value
 	})
 	return
 }

@@ -45,7 +45,7 @@ key: [1, "hi"]
 	// new: 1
 }
 
-func ExampleSetSequence() {
+func ExampleSetScalar() {
 	// Load YAML data
 	docNode := new(goyaml.Node)
 	_ = goyaml.Unmarshal([]byte(`---
@@ -58,13 +58,48 @@ h:
 	node := docNode.Content[0]
 
 	// Edit.
-	content := []any{
-		"yello",
-		true,
-		int64(123),
-		"hello",
+	_, _ = SetScalar(node, MustParsePath(".new"), "some content")
+	bytes, _ := goyaml.Marshal(docNode)
+	fmt.Println(string(bytes))
+	// Output:
+	// # Comment that should be preserved.
+	// key: [1, "hi"]
+	// h:
+	//     - abc
+	//     - 123
+	// new: some content
+}
+
+func ExampleSet() {
+	// Load YAML data
+	docNode := new(goyaml.Node)
+	_ = goyaml.Unmarshal([]byte(`---
+# Comment that should be preserved.
+key: [1, "hi"]
+h:
+- abc
+- 123
+`), docNode)
+	node := docNode.Content[0]
+
+	// Edit.
+	content := &goyaml.Node{
+		Kind: goyaml.SequenceNode,
+		Tag:  "!!seq",
 	}
-	_, _, _ = SetSequence(node, MustParsePath(".new"), content)
+	addedNode, _ := Set(node, MustParsePath(".new"), content) // Example of setting a sequence node and adding to its contents
+	addedNode.Content = []*goyaml.Node{
+		{
+			Kind:  goyaml.ScalarNode,
+			Value: "hello there",
+			Tag:   "!!str",
+		},
+	}
+	addedNode.Content = append(addedNode.Content, &goyaml.Node{
+		Kind:  goyaml.ScalarNode,
+		Value: "1234",
+		Tag:   "!!int",
+	})
 	bytes, _ := goyaml.Marshal(docNode)
 	fmt.Println(string(bytes))
 	// Output:
@@ -74,62 +109,6 @@ h:
 	//     - abc
 	//     - 123
 	// new:
-	//     - yello
-	//     - true
-	//     - 123
-	//     - hello
-}
-
-func ExampleSetNewMap() {
-	// Load YAML data
-	docNode := new(goyaml.Node)
-	_ = goyaml.Unmarshal([]byte(`---
-# Comment that should be preserved.
-key: [1, "hi"]
-`), docNode)
-	node := docNode.Content[0]
-
-	// Edit.
-	_, _, _ = SetNewMap(node, MustParsePath(".new"))
-	_, _, _ = SetString(node, MustParsePath(".new[\"abc\"]"), "yello")
-	bytes, _ := goyaml.Marshal(docNode)
-	fmt.Println(string(bytes))
-	// Output:
-	// # Comment that should be preserved.
-	// key: [1, "hi"]
-	// new:
-	//     abc: yello
-}
-
-func ExampleSetNewMap_second() {
-	// Load YAML data
-	docNode := new(goyaml.Node)
-	_ = goyaml.Unmarshal([]byte(`---
-# Comment that should be preserved.
-key: [1, "hi"]
-`), docNode)
-	node := docNode.Content[0]
-
-	// Edit.
-	_, _, _ = SetNewMap(node, MustParsePath(".new"))
-	content := []any{
-		"yello",
-		true,
-		int64(123),
-		"hello",
-	}
-	_, _, _ = SetString(node, MustParsePath(".new[\"abc\"]"), "yello")
-	_, _, _ = SetSequence(node, MustParsePath(".new[\"seq_thing\"]"), content)
-	bytes, _ := goyaml.Marshal(docNode)
-	fmt.Println(string(bytes))
-	// Output:
-	// # Comment that should be preserved.
-	// key: [1, "hi"]
-	// new:
-	//     abc: yello
-	//     seq_thing:
-	//         - yello
-	//         - true
-	//         - 123
-	//         - hello
+	//     - hello there
+	//     - 1234
 }
