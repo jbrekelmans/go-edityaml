@@ -33,7 +33,7 @@ func getMappingInsertIndex(node, key *goyaml.Node) int {
 	return i
 }
 
-func set(node *goyaml.Node, path Path, value any, valueNodeFactory func() *goyaml.Node) (valueNode *goyaml.Node, changed bool, err error) {
+func setCommon(node *goyaml.Node, path Path) (valueNode *goyaml.Node, err error) {
 	var i int
 	if len(path) > 0 {
 		node, i, err = Get(node, path[:len(path)-1])
@@ -58,7 +58,6 @@ func set(node *goyaml.Node, path Path, value any, valueNodeFactory func() *goyam
 				}
 				addToMapping(node, key, value)
 				node = value
-				changed = true
 				i++
 				if i == len(path)-1 {
 					break
@@ -79,9 +78,8 @@ func set(node *goyaml.Node, path Path, value any, valueNodeFactory func() *goyam
 					err = fmt.Errorf(`TODO: %w`, err)
 					return
 				}
-				valueNode = valueNodeFactory()
+				valueNode = new(goyaml.Node)
 				addToMapping(node, key, valueNode)
-				changed = true
 				return
 			}
 		} else if node.Kind == goyaml.SequenceNode {
@@ -98,10 +96,6 @@ func set(node *goyaml.Node, path Path, value any, valueNodeFactory func() *goyam
 	} else {
 		valueNode = node
 	}
-	if ok, _ := plumbing.NodeHasValueEqualTo(valueNode, value); !ok {
-		*valueNode = *valueNodeFactory()
-		changed = true
-	}
 	return
 }
 
@@ -111,9 +105,7 @@ func set(node *goyaml.Node, path Path, value any, valueNodeFactory func() *goyam
 // The scalar node representing the specified string is returned.
 // This can be used to control the style/comments in the output YAML.
 func SetString(node *goyaml.Node, path Path, value string) (valueNode *goyaml.Node, changed bool, err error) {
-	valueNode, changed, err = set(node, path, value, func() *goyaml.Node {
-		return plumbing.MakeStringScalar(value)
-	})
+	valueNode, changed, err = SetScalar(node, path, value)
 	return
 }
 
@@ -123,9 +115,7 @@ func SetString(node *goyaml.Node, path Path, value string) (valueNode *goyaml.No
 // The scalar node representing the specified boolean is returned.
 // This can be used to control the style/comments in the output YAML.
 func SetBool(node *goyaml.Node, path Path, value bool) (valueNode *goyaml.Node, changed bool, err error) {
-	valueNode, changed, err = set(node, path, value, func() *goyaml.Node {
-		return plumbing.MakeBoolScalar(value)
-	})
+	valueNode, changed, err = SetScalar(node, path, value)
 	return
 }
 
@@ -135,33 +125,38 @@ func SetBool(node *goyaml.Node, path Path, value bool) (valueNode *goyaml.Node, 
 // The scalar node representing the specified int is returned.
 // This can be used to control the style/comments in the output YAML.
 func SetInt(node *goyaml.Node, path Path, value int64) (valueNode *goyaml.Node, changed bool, err error) {
-	valueNode, changed, err = set(node, path, value, func() *goyaml.Node {
-		return plumbing.MakeIntScalar(value)
-	})
+	valueNode, changed, err = SetScalar(node, path, value)
 	return
 }
 
 // SetScalar sets a scalar value at the given path within the given node.
-//
-// node is the node to set the value within.
-//
-// path is the path within the node to set the value at.
-//
-// value is the scalar value to set, eg. "hello".
-//
-// Returns a bool showing whether or not the value set updated an existing value (ie. value was changed).
-func SetScalar(node *goyaml.Node, path Path, value any) (changed bool, err error) {
-	n, err := plumbing.MakeScalar(value)
-	if err == nil {
-		_, changed, err = set(node, path, nil, func() *goyaml.Node {
-			return n
-		})
+// The value is converted to a node via "github.com/jbrekelmans/go-edityaml/plumbing".MakeScalar.
+// Maps are created along the path as needed.
+// path can be empty, in which case node is updated to a scalar with the specified value.
+// The scalar node representing the specified value is returned.
+// This can be used to control the style/comments in the output YAML.
+func SetScalar(node *goyaml.Node, path Path, value any) (valueNode *goyaml.Node, changed bool, err error) {
+	valueNode, err = setCommon(node, path)
+	if err != nil {
+		return
 	}
-
+	ok, err := plumbing.NodeHasValueEqualTo(valueNode, value)
+	if err != nil {
+		return
+	}
+	if !ok {
+		var newValueNode *goyaml.Node
+		newValueNode, err = plumbing.MakeScalar(value)
+		if err != nil {
+			return
+		}
+		*valueNode = *newValueNode
+		changed = true
+	}
 	return
 }
 
-// SetScalar sets a node at the given path within the given node.
+// Set sets a node at the given path within the given node.
 //
 // node is the node to set the value within.
 //
@@ -180,9 +175,11 @@ func SetScalar(node *goyaml.Node, path Path, value any) (changed bool, err error
 //
 // err := Set(node, ".x.y", value)
 // ...
-func Set(node *goyaml.Node, path Path, value *goyaml.Node) (addedNode *goyaml.Node, err error) {
-	addedNode, _, err = set(node, path, nil, func() *goyaml.Node {
-		return value
-	})
+func Set(node *goyaml.Node, path Path, value goyaml.Node) (valueNode *goyaml.Node, err error) {
+	valueNode, err = setCommon(node, path)
+	if err != nil {
+		return
+	}
+	*valueNode = value
 	return
 }
