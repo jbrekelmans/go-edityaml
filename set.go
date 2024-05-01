@@ -6,6 +6,7 @@ import (
 	goyaml "gopkg.in/yaml.v3"
 
 	"github.com/jbrekelmans/go-edityaml/plumbing"
+	"github.com/rs/zerolog/log"
 )
 
 func addToMapping(node *goyaml.Node, key, value *goyaml.Node) {
@@ -66,6 +67,7 @@ func setCommon(node *goyaml.Node, path Path) (valueNode *goyaml.Node, err error)
 		}
 		var j int
 		if node.Kind == goyaml.MappingNode {
+			log.Debug().Msgf("MAPPINGNODE FOUND")
 			j, err = plumbing.DoMapLookup(node, path[i])
 			if err != nil {
 				err = fmt.Errorf("error doing DoMapLookup(<node at path %s>, %#v): %w", path[:i], path[i], err)
@@ -83,6 +85,7 @@ func setCommon(node *goyaml.Node, path Path) (valueNode *goyaml.Node, err error)
 				return
 			}
 		} else if node.Kind == goyaml.SequenceNode {
+			log.Debug().Msgf("SEQUENCENODE FOUND")
 			j, err = plumbing.AccessSequence(node, path[i])
 			if err != nil {
 				err = fmt.Errorf("error doing AccessSequence(<node at path %s>, %#v): %w", path[:i], path[i], err)
@@ -92,10 +95,14 @@ func setCommon(node *goyaml.Node, path Path) (valueNode *goyaml.Node, err error)
 			err = fmt.Errorf(`cannot set within node at path %s: node is neither a map nor a sequence`, path[:i])
 			return
 		}
+		log.Debug().Msgf("VALUENODE 123 IS %#v", valueNode)
 		valueNode = node.Content[j]
+		log.Debug().Msgf("VALUENODE 456 IS %#v", valueNode)
 	} else {
+		log.Debug().Msgf("SCALARNODE FOUND")
 		valueNode = node
 	}
+	log.Debug().Msgf("VALUENODE FINAL IS %#v", valueNode)
 	return
 }
 

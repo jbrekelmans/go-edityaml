@@ -153,3 +153,46 @@ h:
 	//     - hello there
 	//     - 1234
 }
+
+func ExampleSet_second() {
+	// Load YAML data
+	docNode := new(goyaml.Node)
+	_ = goyaml.Unmarshal([]byte(`---
+# Comment that should be preserved.
+key: [1, "hi"]
+h:
+- abc
+- 123
+`), docNode)
+	node := docNode.Content[0]
+
+	// Edit.
+	content := &goyaml.Node{
+		Kind: goyaml.SequenceNode,
+		Tag:  "!!seq",
+	}
+	addedNode, _ := Set(node, MustParsePath(".new"), content) // Example of setting a sequence node and adding to its contents
+	addedNode.Content = []*goyaml.Node{
+		{
+			Kind:  goyaml.ScalarNode,
+			Value: "hello there",
+			Tag:   "!!str",
+		},
+	}
+	addedNode.Content = append(addedNode.Content, &goyaml.Node{
+		Kind:  goyaml.ScalarNode,
+		Value: "1234",
+		Tag:   "!!int",
+	})
+	bytes, _ := goyaml.Marshal(docNode)
+	fmt.Println(string(bytes))
+	// Output:
+	// # Comment that should be preserved.
+	// key: [1, "hi"]
+	// h:
+	//     - abc
+	//     - 123
+	// new:
+	//     - hello there
+	//     - 1234
+}
